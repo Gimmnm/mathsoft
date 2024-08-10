@@ -1,0 +1,193 @@
+\contentsline {chapter}{中文版致谢}{i}{chapter*.1}%
+\contentsline {chapter}{英文版致谢}{iii}{chapter*.6}%
+\contentsline {chapter}{前言}{v}{chapter*.7}%
+\contentsline {chapter}{目录}{vii}{chapter*.8}%
+\contentsline {chapter}{\numberline {第一章\hspace {.3em}}\LaTeX {} 的基本概念}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}概述}{1}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}\TeX }{1}{subsection.1.1.1}%
+\contentsline {subsection}{\numberline {1.1.2}\LaTeX }{1}{subsection.1.1.2}%
+\contentsline {subsection}{\numberline {1.1.3}\LaTeX {} 的优缺点}{1}{subsection.1.1.3}%
+\contentsline {subsection}{\numberline {1.1.4}命令行基础}{2}{subsection.1.1.4}%
+\contentsline {section}{\numberline {1.2}第一次使用 \LaTeX }{3}{section.1.2}%
+\contentsline {section}{\numberline {1.3}\LaTeX {} 命令和代码结构}{4}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}\LaTeX {} 命令和环境}{4}{subsection.1.3.1}%
+\contentsline {subsection}{\numberline {1.3.2}\LaTeX {} 源代码结构}{5}{subsection.1.3.2}%
+\contentsline {section}{\numberline {1.4}\LaTeX {} 宏包和文档类}{5}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}文档类}{5}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}宏包}{6}{subsection.1.4.2}%
+\contentsline {section}{\numberline {1.5}\LaTeX {} 用到的文件一览}{7}{section.1.5}%
+\contentsline {section}{\numberline {1.6}文件的组织方式}{7}{section.1.6}%
+\contentsline {section}{\numberline {1.7}\LaTeX {} 和 \TeX {} 相关的术语和概念}{8}{section.1.7}%
+\contentsline {chapter}{\numberline {第二章\hspace {.3em}}用 \LaTeX {} 排版文字}{11}{chapter.2}%
+\contentsline {section}{\numberline {2.1}语言文字和编码}{11}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}ASCII 编码}{11}{subsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.1.2}扩展编码}{11}{subsection.2.1.2}%
+\contentsline {subsection}{\numberline {2.1.3}UTF-8 编码}{12}{subsection.2.1.3}%
+\contentsline {section}{\numberline {2.2}排版中文}{12}{section.2.2}%
+\contentsline {section}{\numberline {2.3}\LaTeX {} 中的字符}{13}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}空格和分段}{13}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}注释}{13}{subsection.2.3.2}%
+\contentsline {subsection}{\numberline {2.3.3}特殊字符}{13}{subsection.2.3.3}%
+\contentsline {subsection}{\numberline {2.3.4}连字}{13}{subsection.2.3.4}%
+\contentsline {subsection}{\numberline {2.3.5}标点符号}{14}{subsection.2.3.5}%
+\contentsline {subsubsection}{引号}{14}{subsubsection*.11}%
+\contentsline {subsubsection}{连字号和破折号}{14}{subsubsection*.12}%
+\contentsline {subsubsection}{省略号}{14}{subsubsection*.13}%
+\contentsline {subsubsection}{波浪号}{14}{subsubsection*.14}%
+\contentsline {subsection}{\numberline {2.3.6}拉丁文扩展与重音}{14}{subsection.2.3.6}%
+\contentsline {subsection}{\numberline {2.3.7}其它符号}{15}{subsection.2.3.7}%
+\contentsline {subsection}{\numberline {2.3.8}\LaTeX {} 标志}{15}{subsection.2.3.8}%
+\contentsline {section}{\numberline {2.4}断行和断页}{15}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}单词间距}{15}{subsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.4.2}手动断行和断页}{16}{subsection.2.4.2}%
+\contentsline {subsection}{\numberline {2.4.3}断词}{17}{subsection.2.4.3}%
+\contentsline {chapter}{\numberline {第三章\hspace {.3em}}文档元素}{19}{chapter.3}%
+\contentsline {section}{\numberline {3.1}章节和目录}{19}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}章节标题}{19}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}目录}{20}{subsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.1.3}文档结构的划分}{20}{subsection.3.1.3}%
+\contentsline {section}{\numberline {3.2}标题页}{20}{section.3.2}%
+\contentsline {section}{\numberline {3.3}交叉引用}{22}{section.3.3}%
+\contentsline {section}{\numberline {3.4}脚注和边注}{22}{section.3.4}%
+\contentsline {section}{\numberline {3.5}特殊环境}{23}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}列表}{23}{subsection.3.5.1}%
+\contentsline {subsection}{\numberline {3.5.2}对齐环境}{25}{subsection.3.5.2}%
+\contentsline {subsection}{\numberline {3.5.3}引用环境}{25}{subsection.3.5.3}%
+\contentsline {subsection}{\numberline {3.5.4}摘要环境}{26}{subsection.3.5.4}%
+\contentsline {subsection}{\numberline {3.5.5}代码环境}{26}{subsection.3.5.5}%
+\contentsline {section}{\numberline {3.6}表格}{27}{section.3.6}%
+\contentsline {subsection}{\numberline {3.6.1}列格式}{27}{subsection.3.6.1}%
+\contentsline {subsection}{\numberline {3.6.2}列宽}{29}{subsection.3.6.2}%
+\contentsline {subsection}{\numberline {3.6.3}横线}{29}{subsection.3.6.3}%
+\contentsline {subsection}{\numberline {3.6.4}合并单元格}{30}{subsection.3.6.4}%
+\contentsline {subsection}{\numberline {3.6.5}嵌套表格}{31}{subsection.3.6.5}%
+\contentsline {subsection}{\numberline {3.6.6}行距控制}{31}{subsection.3.6.6}%
+\contentsline {section}{\numberline {3.7}图片}{32}{section.3.7}%
+\contentsline {section}{\numberline {3.8}盒子}{33}{section.3.8}%
+\contentsline {subsection}{\numberline {3.8.1}水平盒子}{33}{subsection.3.8.1}%
+\contentsline {subsection}{\numberline {3.8.2}带框的水平盒子}{33}{subsection.3.8.2}%
+\contentsline {subsection}{\numberline {3.8.3}垂直盒子}{34}{subsection.3.8.3}%
+\contentsline {subsection}{\numberline {3.8.4}标尺盒子}{34}{subsection.3.8.4}%
+\contentsline {section}{\numberline {3.9}浮动体}{35}{section.3.9}%
+\contentsline {subsection}{\numberline {3.9.1}浮动体的标题}{35}{subsection.3.9.1}%
+\contentsline {subsection}{\numberline {3.9.2}并排和子图表}{36}{subsection.3.9.2}%
+\contentsline {chapter}{\numberline {第四章\hspace {.3em}}排版数学公式}{39}{chapter.4}%
+\contentsline {section}{\numberline {4.1}\hologoRobust {AmS} 宏集}{39}{section.4.1}%
+\contentsline {section}{\numberline {4.2}公式排版基础}{39}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}行内和行间公式}{39}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}数学模式}{40}{subsection.4.2.2}%
+\contentsline {section}{\numberline {4.3}数学符号}{41}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}一般符号}{41}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}指数、上下标和导数}{41}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}分式和根式}{42}{subsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.3.4}关系符}{42}{subsection.4.3.4}%
+\contentsline {subsection}{\numberline {4.3.5}算符}{42}{subsection.4.3.5}%
+\contentsline {subsection}{\numberline {4.3.6}巨算符}{43}{subsection.4.3.6}%
+\contentsline {subsection}{\numberline {4.3.7}数学重音和上下括号}{44}{subsection.4.3.7}%
+\contentsline {subsection}{\numberline {4.3.8}箭头}{45}{subsection.4.3.8}%
+\contentsline {subsection}{\numberline {4.3.9}括号和定界符}{45}{subsection.4.3.9}%
+\contentsline {section}{\numberline {4.4}多行公式}{46}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}长公式折行}{46}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}多行公式}{46}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}公用编号的多行公式}{47}{subsection.4.4.3}%
+\contentsline {section}{\numberline {4.5}数组和矩阵}{47}{section.4.5}%
+\contentsline {section}{\numberline {4.6}公式中的间距}{48}{section.4.6}%
+\contentsline {section}{\numberline {4.7}数学符号的字体控制}{49}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}数学字母字体}{49}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}加粗的数学符号}{50}{subsection.4.7.2}%
+\contentsline {subsection}{\numberline {4.7.3}数学符号的尺寸}{50}{subsection.4.7.3}%
+\contentsline {section}{\numberline {4.8}定理环境}{51}{section.4.8}%
+\contentsline {subsection}{\numberline {4.8.1}\LaTeX {} 原始的定理环境}{51}{subsection.4.8.1}%
+\contentsline {subsection}{\numberline {4.8.2}\pkg {amsthm} 宏包}{51}{subsection.4.8.2}%
+\contentsline {subsection}{\numberline {4.8.3}证明环境和证毕符号}{52}{subsection.4.8.3}%
+\contentsline {section}{\numberline {4.9}符号表}{54}{section.4.9}%
+\contentsline {subsection}{\numberline {4.9.1}\LaTeX {} 普通符号}{54}{subsection.4.9.1}%
+\contentsline {subsection}{\numberline {4.9.2}\hologoRobust {AmS} 符号}{58}{subsection.4.9.2}%
+\contentsline {chapter}{\numberline {第五章\hspace {.3em}}排版样式设定}{61}{chapter.5}%
+\contentsline {section}{\numberline {5.1}字体和字号}{61}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}字体样式}{61}{subsection.5.1.1}%
+\contentsline {subsection}{\numberline {5.1.2}字号}{61}{subsection.5.1.2}%
+\contentsline {subsection}{\numberline {5.1.3}选用字体宏包}{63}{subsection.5.1.3}%
+\contentsline {subsection}{\numberline {5.1.4}字体编码}{63}{subsection.5.1.4}%
+\contentsline {subsection}{\numberline {5.1.5}使用 \pkg {fontspec} 宏包更改字体}{63}{subsection.5.1.5}%
+\contentsline {subsection}{\numberline {5.1.6}在 \pkg {ctex} 宏包或文档类中更改中文字体}{65}{subsection.5.1.6}%
+\contentsline {subsection}{\numberline {5.1.7}使用 \pkg {unicode-math} 宏包配置 Unicode 数学字体}{65}{subsection.5.1.7}%
+\contentsline {section}{\numberline {5.2}文字装饰和强调}{65}{section.5.2}%
+\contentsline {section}{\numberline {5.3}段落格式和间距}{66}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}长度和长度变量}{66}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}行距}{67}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}段落格式}{68}{subsection.5.3.3}%
+\contentsline {subsection}{\numberline {5.3.4}水平间距}{68}{subsection.5.3.4}%
+\contentsline {subsection}{\numberline {5.3.5}垂直间距}{69}{subsection.5.3.5}%
+\contentsline {section}{\numberline {5.4}页面和分栏}{69}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}利用 \pkg {geometry} 宏包设置页面参数}{71}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}页面内容的垂直对齐}{72}{subsection.5.4.2}%
+\contentsline {subsection}{\numberline {5.4.3}分栏}{72}{subsection.5.4.3}%
+\contentsline {section}{\numberline {5.5}页眉页脚}{72}{section.5.5}%
+\contentsline {subsection}{\numberline {5.5.1}基本的页眉页脚样式}{72}{subsection.5.5.1}%
+\contentsline {subsection}{\numberline {5.5.2}手动更改页眉页脚的内容}{73}{subsection.5.5.2}%
+\contentsline {subsection}{\numberline {5.5.3}\pkg {fancyhdr} 宏包}{74}{subsection.5.5.3}%
+\contentsline {chapter}{\numberline {第六章\hspace {.3em}}特色工具和功能}{75}{chapter.6}%
+\contentsline {section}{\numberline {6.1}参考文献和 \hologoRobust {BibTeX} 工具}{75}{section.6.1}%
+\contentsline {subsection}{\numberline {6.1.1}基本的参考文献和引用}{75}{subsection.6.1.1}%
+\contentsline {subsection}{\numberline {6.1.2}\hologoRobust {BibTeX} 数据库}{76}{subsection.6.1.2}%
+\contentsline {subsection}{\numberline {6.1.3}\hologoRobust {BibTeX} 样式}{77}{subsection.6.1.3}%
+\contentsline {subsection}{\numberline {6.1.4}使用 \hologoRobust {BibTeX} 排版参考文献}{77}{subsection.6.1.4}%
+\contentsline {subsection}{\numberline {6.1.5}\pkg {natbib} 宏包}{78}{subsection.6.1.5}%
+\contentsline {subsection}{\numberline {6.1.6}\pkg {biblatex} 宏包}{79}{subsection.6.1.6}%
+\contentsline {subsubsection}{文档结构和 \pkg {biblatex} 相关命令}{79}{subsubsection*.55}%
+\contentsline {subsubsection}{编译方式}{79}{subsubsection*.56}%
+\contentsline {subsubsection}{\pkg {biblatex} 样式和其它选项}{81}{subsubsection*.57}%
+\contentsline {section}{\numberline {6.2}索引和 makeindex 工具}{81}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}使用 makeindex 工具的方法}{81}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}索引项的写法}{82}{subsection.6.2.2}%
+\contentsline {section}{\numberline {6.3}使用颜色}{82}{section.6.3}%
+\contentsline {subsection}{\numberline {6.3.1}颜色的表达方式}{83}{subsection.6.3.1}%
+\contentsline {subsection}{\numberline {6.3.2}带颜色的文本和盒子}{84}{subsection.6.3.2}%
+\contentsline {section}{\numberline {6.4}使用超链接}{84}{section.6.4}%
+\contentsline {subsection}{\numberline {6.4.1}\pkg {hyperref} 宏包}{84}{subsection.6.4.1}%
+\contentsline {subsection}{\numberline {6.4.2}超链接}{85}{subsection.6.4.2}%
+\contentsline {subsection}{\numberline {6.4.3}PDF 书签}{86}{subsection.6.4.3}%
+\contentsline {subsection}{\numberline {6.4.4}PDF 文档属性}{86}{subsection.6.4.4}%
+\contentsline {chapter}{\numberline {第七章\hspace {.3em}}绘图功能}{87}{chapter.7}%
+\contentsline {section}{\numberline {7.1}绘图语言简介}{87}{section.7.1}%
+\contentsline {section}{\numberline {7.2}\hologoRobust {TikZ} 绘图语言}{87}{section.7.2}%
+\contentsline {subsection}{\numberline {7.2.1}\hologoRobust {TikZ} 坐标和路径}{88}{subsection.7.2.1}%
+\contentsline {subsection}{\numberline {7.2.2}\hologoRobust {TikZ} 绘图命令和参数}{90}{subsection.7.2.2}%
+\contentsline {subsection}{\numberline {7.2.3}\hologoRobust {TikZ} 文字结点}{92}{subsection.7.2.3}%
+\contentsline {subsection}{\numberline {7.2.4}在 \hologoRobust {TikZ} 中使用循环}{94}{subsection.7.2.4}%
+\contentsline {chapter}{\numberline {第八章\hspace {.3em}}自定义 \LaTeX {} 命令和功能}{95}{chapter.8}%
+\contentsline {section}{\numberline {8.1}自定义命令和环境}{95}{section.8.1}%
+\contentsline {subsection}{\numberline {8.1.1}定义新命令}{95}{subsection.8.1.1}%
+\contentsline {subsection}{\numberline {8.1.2}定义环境}{96}{subsection.8.1.2}%
+\contentsline {subsection}{\numberline {8.1.3}\pkg {xparse} 宏包简介}{96}{subsection.8.1.3}%
+\contentsline {section}{\numberline {8.2}编写自己的宏包和文档类}{98}{section.8.2}%
+\contentsline {subsection}{\numberline {8.2.1}编写简单的宏包}{98}{subsection.8.2.1}%
+\contentsline {subsection}{\numberline {8.2.2}在宏包中调用其它宏包}{99}{subsection.8.2.2}%
+\contentsline {subsection}{\numberline {8.2.3}编写自己的文档类}{99}{subsection.8.2.3}%
+\contentsline {section}{\numberline {8.3}计数器}{99}{section.8.3}%
+\contentsline {subsection}{\numberline {8.3.1}定义和修改计数器}{99}{subsection.8.3.1}%
+\contentsline {subsection}{\numberline {8.3.2}计数器的输出格式}{100}{subsection.8.3.2}%
+\contentsline {subsection}{\numberline {8.3.3}\LaTeX {} 中的计数器}{100}{subsection.8.3.3}%
+\contentsline {subsubsection}{secnumdepth}{101}{subsubsection*.65}%
+\contentsline {subsubsection}{tocdepth}{101}{subsubsection*.66}%
+\contentsline {section}{\numberline {8.4}\LaTeX {} 可定制的一些命令和参数}{101}{section.8.4}%
+\contentsline {chapter}{\numberline {附录 A\hspace {.3em}}安装 \TeX {} 发行版}{103}{appendix.A}%
+\contentsline {section}{\numberline {A.1}\TeX {} 发行版简介}{103}{section.A.1}%
+\contentsline {subsection}{\numberline {A.1.1}安装发行版}{103}{subsection.A.1.1}%
+\contentsline {subsubsection}{\hologoRobust {TeXLive}}{103}{subsubsection*.69}%
+\contentsline {subsubsection}{\hologoRobust {MiKTeX}}{104}{subsubsection*.70}%
+\contentsline {section}{\numberline {A.2}安装和更新宏包}{104}{section.A.2}%
+\contentsline {subsection}{\numberline {A.2.1}手动安装宏包}{105}{subsection.A.2.1}%
+\contentsline {chapter}{\numberline {附录 B\hspace {.3em}}排除错误、寻求帮助}{107}{appendix.B}%
+\contentsline {section}{\numberline {B.1}\LaTeX {} 错误}{107}{section.B.1}%
+\contentsline {subsubsection}{处理方式}{107}{subsubsection*.71}%
+\contentsline {subsubsection}{常见的 \LaTeX {} 错误信息}{107}{subsubsection*.72}%
+\contentsline {section}{\numberline {B.2}查找帮助文档}{109}{section.B.2}%
+\contentsline {section}{\numberline {B.3}常用宏包简介}{110}{section.B.3}%
+\contentsline {subsection}{\numberline {B.3.1}文字、公式和符号}{110}{subsection.B.3.1}%
+\contentsline {subsection}{\numberline {B.3.2}排版元素}{110}{subsection.B.3.2}%
+\contentsline {subsection}{\numberline {B.3.3}图表和浮动体}{111}{subsection.B.3.3}%
+\contentsline {subsection}{\numberline {B.3.4}修改版式}{111}{subsection.B.3.4}%
+\contentsline {chapter}{参考文献}{113}{appendix*.73}%
+\contentsline {chapter}{GNU Free Documentation License}{115}{appendix*.74}%

@@ -1,0 +1,17 @@
+\addvspace {10pt}
+\contentsline {sourcecode}{\numberline {1.1}{\ignorespaces \LaTeX {} 的一个最简单的源代码示例。\relax }}{3}{sourcecode.1.1}%
+\contentsline {sourcecode}{\numberline {1.2}{\ignorespaces 在\LaTeX {} 中排版中文的最简源代码示例。\relax }}{3}{sourcecode.1.2}%
+\addvspace {10pt}
+\addvspace {10pt}
+\contentsline {sourcecode}{\numberline {3.1}{\ignorespaces \cls {book} 文档类的文档结构示例。\relax }}{21}{sourcecode.3.1}%
+\contentsline {sourcecode}{\numberline {3.2}{\ignorespaces \LaTeX {} 默认的标题页示例和效果。\relax }}{21}{sourcecode.3.2}%
+\addvspace {10pt}
+\addvspace {10pt}
+\contentsline {sourcecode}{\numberline {5.1}{\ignorespaces \pkg {fancyhdr} 宏包的使用方法示例。\relax }}{74}{sourcecode.5.1}%
+\addvspace {10pt}
+\contentsline {sourcecode}{\numberline {6.1}{\ignorespaces 利用 \texttt {books.bib} 生成参考文献的源代码 \texttt {demo.tex}。\relax }}{78}{sourcecode.6.1}%
+\contentsline {sourcecode}{\numberline {6.2}{\ignorespaces 应用 \pkg {biblatex} 的示例 egbibdata.bib 和 demo.tex。\relax }}{80}{sourcecode.6.2}%
+\addvspace {10pt}
+\contentsline {sourcecode}{\numberline {7.1}{\ignorespaces \hologoRobust {TikZ} 绘图示例源代码和效果。\relax }}{94}{sourcecode.7.1}%
+\addvspace {10pt}
+\contentsline {sourcecode}{\numberline {8.1}{\ignorespaces 宏包的一个最简示例。\relax }}{99}{sourcecode.8.1}%

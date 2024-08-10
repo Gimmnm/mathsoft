@@ -1,0 +1,917 @@
+\documentclass{ctexart}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{tikz}  
+\usepackage{graphicx}  
+\usepackage{subcaption}
+
+\usetikzlibrary{positioning}  
+
+\title{进程和信号}
+\author{Crazyfish\footnote{wang\_heyu@msn.com} \\ CC98}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\noindent {\bfseries 注：本文档是对《Beginning Linux Programming 4th Edition》第11章的学习笔记。}
+
+进程和信号构成了 Linux 操作环境的基本部分。它们控制着 Linux 和所有其他类 UNIX 计算机系统执行的几乎所有活动。
+理解 Linux 和 UNIX 如何管理进程，对于任何系统程序员、应用程序员或系统管理员都是非常有益的。
+
+在本章中，你将学习如何在 Linux 环境中处理进程，以及如何在任何给定时间精确地找出计算机正在做什么。
+你还将看到如何从你自己的程序中启动和停止其他进程，如何使进程发送和接收消息，以及如何避免僵尸进程。
+特别是，你将学习关于
+\begin{itemize}
+    \item 进程的结构、类型和调度
+    \item 以不同方式启动新进程
+    \item 父进程、子进程和僵尸进程
+    \item 信号是什么以及如何使用它们
+\end{itemize}
+
+\section{进程和进程管理}
+UNIX标准，特别是IEEE Std 1003.1, 2004 Edition，定义进程为 ``一个地址空间，其中有一个或多个线程在该地址空间中执行，并且为这些线程提供所需的系统资源。'' 
+不太严格地，我们将进程视为正在运行的程序。
+
+像 Linux 这样的多任务操作系统可以让许多程序同时运行。每一个正在运行的程序实例都构成一个进程。
+
+作为一个多用户系统，Linux 允许许多用户同时访问系统。每个用户可以同时运行许多程序，甚至可以同时运行同一程序的许多实例。
+系统本身运行其他程序来管理系统资源和控制用户访问。
+
+一个正在运行的程序 —— 或进程 —— 包括程序代码、数据、变量（占用系统内存）、打开的文件（文件描述符）和环境。通常，Linux 系统会在进程之间共享代码和系统库，
+以便在任何时候内存中只有一份代码的副本。
+
+我们可以用 \verb|ps| 命令显示你正在运行的进程，其他用户正在运行的进程，或系统上的所有进程。比如：
+\begin{verbatim}
+    $ ps -el
+\end{verbatim}
+
+\texttt{ps -el} 命令用于显示系统中所有进程的详细信息。这个命令的输出包含许多列，每列的含义如下：  
+  
+\begin{itemize}  
+\item \textbf{F}：这个字段显示了进程的标志，这些标志提供了关于进程状态的各种信息，如是否为内核进程，是否在交换空间中等。  
+  
+\item \textbf{S}：这个字段显示了进程的状态。常见的状态包括：  
+  \begin{itemize}  
+  \item R (running)：进程正在运行或在运行队列中等待。  
+  \item S (sleeping)：进程在等待某个条件成立，然后才能继续运行。  
+  \item Z (zombie)：进程已经终止，但父进程还没有获取到它的退出状态。  
+  \end{itemize}  
+  
+\item \textbf{UID}：这个字段显示了运行进程的用户的用户ID。  
+  
+\item \textbf{PID}：这个字段显示了进程ID。  
+  
+\item \textbf{PPID}：这个字段显示了父进程ID。  
+  
+\item \textbf{C}：这个字段显示了进程使用的CPU时间的百分比。  
+  
+\item \textbf{PRI}：这个字段显示了进程的优先级。  
+  
+\item \textbf{NI}：这个字段显示了nice值，它是一个用户设定的值，用于影响进程的优先级。  
+  
+\item \textbf{ADDR}：这个字段显示了进程在内存中的位置。  
+  
+\item \textbf{SZ}：这个字段显示了进程的大小。  
+  
+\item \textbf{WCHAN}：如果进程处于睡眠状态，这个字段显示了使进程进入睡眠状态的内核函数名称。  
+  
+\item \textbf{TTY}：这个字段显示了进程的终端名称。  
+  
+\item \textbf{TIME}：这个字段显示了进程消耗的CPU时间。  
+  
+\item \textbf{CMD}：这个字段显示了启动进程的命令行命令。  
+\end{itemize} 
+
+\begin{verbatim}
+    $ ps -ef
+\end{verbatim}
+简洁的多, 但是会显示所有用户的进程。包括系统进程。注意其中有一个叫 \texttt{init} 的进程，
+它是所有进程的祖先。
+
+\begin{verbatim}
+    $ ps -ef | grep init
+\end{verbatim}
+
+一般来说，每个进程都是由另一个被称为其父进程的进程启动的。这样启动的进程被称为子进程。
+当 Linux 启动时，它运行一个单独的程序，即最初的祖先和进程号为 1 的 init。
+如果你愿意，这可以被看作是操作系统的进程管理器，是所有进程的祖父。
+
+启动新的进程  
+  
+你可以通过使用系统库函数，从一个程序内部运行另一个程序，从而创建一个新的进程。  
+  
+\begin{verbatim}  
+#include <stdlib.h>  
+int system (const char *string);  
+\end{verbatim}  
+  
+\texttt{system}函数运行作为字符串传递给它的命令，并等待它完成。该命令的执行就像命令  
+  
+\begin{verbatim}  
+$ sh -c string  
+\end{verbatim}  
+  
+已经被给到一个 shell 一样。如果无法启动一个 shell 来运行命令，
+\texttt{system} 返回 127，如果发生其他错误，\texttt{system}返回 -1。
+否则，\texttt{system}返回命令的退出代码。  
+
+如果一个程序使用 \texttt{system} 函数启动自己，会创建一个新的进程来运行同样的程序。
+这个新的进程将从主程序开始执行，就像你在命令行中直接运行这个程序一样。  
+  
+需要注意的是，新的进程将拥有其自己的内存空间，与原始进程完全独立。
+这意味着新进程无法访问原始进程的变量或数据结构，除非使用某种形式的进程间通信，如管道、共享内存或套接字。  
+  
+此外，如果程序不加限制地启动自己，可能会导致无限制的进程创建，这可能会耗尽系统资源，
+导致系统变慢甚至崩溃。因此，如果你打算让程序启动自己，你需要确保有适当的退出条件或限制进程的数量。  
+  
+下面是一个简单的C程序示例，它使用 \texttt{system} 函数启动自己：  
+  
+\begin{verbatim}  
+#include <stdlib.h>  
+  
+int main() {  
+    system("./myprogram");  
+    return 0;  
+}  
+\end{verbatim}  
+  
+在这个例子中，每次 \texttt{main} 函数被调用时，都会启动一个新的 \texttt{myprogram} 进程。
+如果 \texttt{myprogram} 就是这个程序本身，那么就会导致无限制的进程创建 （我不想测试这个代码）。  
+
+但你可以使用\texttt{system}来编写一个运行\texttt{ps}的程序。虽然这本身并不是非常有用，
+但你将看到如何发展这种技术。
+  
+\begin{verbatim}  
+#include <stdlib.h>  
+#include <stdio.h>  
+int main()  
+{  
+    printf("Running ps with system\n");  
+    system("ps -el");  
+    printf("Done.\n");  
+    exit(0);  
+}  
+\end{verbatim}  
+  
+当你编译并运行这个程序，我们会看到system函数使用一个shell来启动所需的程序。
+
+通常，使用system启动其他进程的方式远非理想，因为它通过shell调用所需的程序。
+这既低效，因为在启动程序之前需要启动一个shell，同时也非常依赖于用于shell和环境的安装。
+
+效率更高的方式是替换进程映像。有一整套相关的函数被归类在exec标题下。
+它们在启动进程和呈现程序参数的方式上有所不同。
+exec函数用由路径或文件参数指定的新进程替换当前进程。
+你可以使用exec函数将你的程序的执行 ``交给''另一个程序。例如，
+你可以在启动具有受限使用策略的另一个应用程序之前检查用户的凭据。
+exec函数比system更高效，因为在新程序启动后，原始程序将不再运行。
+
+\begin{verbatim}  
+    #include <unistd.h>  
+    char **environ;  
+    int execl(const char *path, const char *arg0, ..., 
+              (char *)0);  
+    int execlp(const char *file, const char *arg0, ..., 
+              (char *)0);  
+    int execle(const char *path, const char *arg0, ..., 
+               (char *)0, char *const envp[]);  
+    int execv(const char *path, char *const argv[]);  
+    int execvp(const char *file, char *const argv[]);  
+    int execve(const char *path, char *const argv[], 
+               char *const envp[]);  
+\end{verbatim}  
+      
+这些函数属于两种类型。 \texttt{execl}，\texttt{execlp} 和 \texttt{execle} 接受以 null 
+指针结束的可变数量的参数。 \texttt{execv} 和 \texttt{execvp} 的第二个参数是字符串数组。
+在两种情况下，新程序都会以给定的参数出现在传递给 \texttt{main} 的 \texttt{argv} 数组中开始。  
+      
+这些函数通常使用 \texttt{execve} 来实现，尽管没有规定必须这样做。  
+      
+名称后缀为 \texttt{p} 的函数有所不同，它们会搜索 \texttt{PATH} 环境变量以找到新程序的可执行文件。
+如果可执行文件不在路径上，那么需要将包含目录的绝对文件名作为参数传递给函数。  
+      
+全局变量 \texttt{environ} 可用于为新程序环境传递值。或者，可以使用 \texttt{execle} 
+和 \texttt{execve} 函数的额外参数来传递一个字符串数组，作为新程序环境。  
+      
+如果你想使用 \texttt{exec} 函数来启动 \texttt{ps} 程序，你可以从以下六个 
+\texttt{exec} 系列函数中选择，如下面的代码片段中的调用所示：  
+      
+\begin{verbatim}  
+#include <unistd.h>  
+/* 参数列表示例 */  
+/* 注意我们需要一个程序名作为argv[0] */  
+char *const ps_argv[] =  
+    {"ps", "ax", 0};  
+/* 环境示例，不太有用 */  
+char *const ps_envp[] =  
+    {"PATH=/bin:/usr/bin", "TERM=console", 0};  
+/* 可能的exec函数调用 */  
+execl("/bin/ps", "ps", "ax", 0); /* 假设ps在/bin中 */  
+execlp("ps", "ps", "ax", 0); /* 假设/bin在PATH中 */  
+execle("/bin/ps", "ps", "ax", 0, ps_envp); 
+    /* 传递自己的环境 */  
+execv("/bin/ps", ps_argv);  
+execvp("ps", ps_argv);  
+execve("/bin/ps", ps_argv, ps_envp);  
+\end{verbatim}  
+
+注意这里
+\begin{verbatim}
+    {"ps", "ax", 0}
+\end{verbatim}
+最后一个元素是一个空指针，用于标记数组的结束。
+
+当一个程序使用 \verb|exec| 系列函数调用自己时，它实际上是在替换当前进程的内容，
+而不是创建一个新的进程。这意味着它不会消耗额外的系统资源（如内存和进程描述符）。
+
+\verb|exec| 系列函数的工作方式是：它们将当前进程的内存空间中的代码和数据替换为新程序的代码和数据，
+然后跳转到新程序的 \verb|main| 函数开始执行。这意味着执行 \verb|exec| 之后的原程序代码将不会被执行，
+除非 \verb|exec| 调用失败。
+
+所以，如果一个程序使用 \verb|exec| 不断调用自己，它将在同一个进程中无限循环，
+但不会导致系统资源耗尽。然而，这样的程序将无法执行任何有意义的工作，因为每次 \verb|exec| 
+调用都会清除程序的所有状态。
+
+注意，虽然 \verb|exec| 不会消耗额外的系统资源，但是无限循环的程序仍然会占用 CPU 时间。
+如果有太多这样的程序，或者这样的程序运行得太快，那么它们可能会占用大量的 CPU 时间，导致系统变慢。
+
+
+为了使用进程同时执行多个功能，你可以使用线程，或者在程序中创建一个完全独立的进程，
+就像\texttt{init}做的那样，而不是替换当前的执行线程，就像在\texttt{exec}的情况下那样。  
+  
+你可以通过调用\texttt{fork}来创建一个新的进程。这个系统调用复制了当前的进程，
+创建了一个在进程表中的新条目，该条目具有许多与当前进程相同的属性。新进程与原始进程几乎相同，
+执行相同的代码，但具有自己的数据空间、环境和文件描述符。结合\texttt{exec}函数，
+\texttt{fork}就是你创建新进程所需要的全部。  
+  
+\begin{verbatim}  
+#include <sys/types.h>  
+#include <unistd.h>  
+pid_t fork(void);  
+\end{verbatim}  
+  
+父进程中的\texttt{fork}调用返回新的子进程的PID。新进程继续像原始进程一样执行，
+唯一的区别是在子进程中，\texttt{fork}调用返回0。这允许父进程和子进程确定哪个是哪个。  
+  
+如果\texttt{fork}失败，它将返回-1。这通常是由于父进程可能拥有的子进程数量的限制
+（\texttt{CHILD\_MAX}），在这种情况下，\texttt{errno}将被设置为\texttt{EAGAIN}。
+如果进程表中没有足够的空间，或者没有足够的虚拟内存，\texttt{errno}变量将被设置为\texttt{ENOMEM}。  
+  
+使用\texttt{fork}的典型代码片段是  
+  
+\begin{verbatim}  
+pid_t new_pid;  
+new_pid = fork();  
+switch(new_pid) {  
+    case -1 : /* 错误 */  
+        break;  
+    case 0 : /* 我们是子进程 */  
+        break;  
+    default : /* 我们是父进程 */  
+    break;  
+}  
+\end{verbatim}  
+  
+当你使用 \texttt{fork} 启动一个子进程时，它会有自己的生命周期并独立运行。有时，你可能希望知道子进程何时结束。
+例如，在前面的程序中，父进程在子进程之前结束，你会看到一些混乱的输出，因为子进程继续运行。你可以通过调用 \texttt{wait} 
+来安排父进程等待子进程结束后再继续。  
+  
+\begin{verbatim}  
+#include <sys/types.h>  
+#include <sys/wait.h>  
+
+pid_t wait(int *stat_loc);  
+\end{verbatim}  
+  
+\texttt{wait} 系统调用会使父进程暂停，直到其一个子进程停止。该调用返回子进程的PID。这通常是已经终止的子进程。
+状态信息允许父进程确定子进程的退出状态，即从 \texttt{main} 返回的值或传递给 \texttt{exit} 的值。
+如果 \texttt{stat\_loc} 不是空指针，状态信息将被写入它指向的位置。 （这里其实是通过 stat\_loc 在传递信息。） 
+
+你可以使用在 \texttt{sys/wait.h} 中定义的宏来解释状态信息，如下表所示。  
+  
+\begin{tabular}{|l|l|}  
+\hline  
+宏定义 & 描述 \\  
+\hline  
+\texttt{WIFEXITED(stat\_val)} & 如果子进程正常结束，则为非零。\\  
+\texttt{WEXITSTATUS(stat\_val)} & 如果 \texttt{WIFEXITED} 为非零，返回子进程的退出代码。\\  
+\texttt{WIFSIGNALED(stat\_val)} & 如果子进程由于未捕获的信号而结束，则为非零。\\  
+\texttt{WTERMSIG(stat\_val)} & 如果 \texttt{WIFSIGNALED} 为非零，返回信号编号。\\  
+\texttt{WIFSTOPPED(stat\_val)} & 如果子进程已经停止，则为非零。\\  
+\texttt{WSTOPSIG(stat\_val)} & 如果 \texttt{WIFSTOPPED} 为非零，返回信号编号。\\  
+\hline  
+\end{tabular}  
+
+显然这里只能传递一些很简单的消息. 
+
+使用 \texttt{fork} 创建进程可能非常有用，但你必须跟踪子进程。当一个子进程终止时，它与其父进程的关联在父进程正常终止或调用 \texttt{wait} 之前都会保留。
+因此，子进程在进程表中的条目并不会立即被释放。尽管子进程不再活跃，但由于其退出码需要被存储以防父进程随后调用 \texttt{wait}，
+所以它仍然存在于系统中。它成为所谓的停止运行的进程，或者称为僵尸进程。  
+  
+如果你改变 \texttt{fork} 示例程序中的消息数量，你可以看到一个僵尸进程被创建。如果子进程打印的消息少于父进程，那么它将先完成，
+并将作为僵尸进程存在，直到父进程完成。  
+
+如果你使用 \texttt{./fork2 \&} 运行前面的程序，然后在子进程结束后但父进程结束前调用 \texttt{ps} 程序，你将看到如下的一行。 
+(有些系统可能显示为 \texttt{<zombie>} 而不是 \texttt{<defunct>}。)  
+  
+\begin{verbatim}  
+$ ps –al  
+F S UID PID PPID C PRI NI ADDR SZ WCHAN TTY TIME CMD  
+004 S 0 1273 1259 0 75 0 - 589 wait4 pts/2 00:00:00 su  
+000 S 0 1274 1273 0 75 0 - 731 schedu pts/2 00:00:00 bash  
+000 S 500 1463 1262 0 75 0 - 788 schedu pts/1 00:00:00 oclock  
+000 S 500 1465 1262 0 75 0 - 2569 schedu pts/1 00:00:01 emacs  
+000 S 500 1603 1262 0 75 0 - 313 schedu pts/1 00:00:00 fork2  
+003 Z 500 1604 1603 0 75 0 - 0 do_exi pts/1 00:00:00 fork2 <defunct>  
+000 R 500 1605 1262 0 81 0 - 781 - pts/1 00:00:00 ps  
+\end{verbatim}  
+  
+如果父进程然后异常终止，子进程会自动将 PID 为 1 的进程（\texttt{init}）作为父进程。子进程现在是一个不再运行的僵尸，
+但由于父进程的异常终止，已被 \texttt{init} 继承。僵尸将保留在进程表中，直到被 \texttt{init} 进程收集。
+表越大，这个过程越慢。你需要避免僵尸进程，因为它们会消耗资源，直到 \texttt{init} 清理它们。  
+
+注意到这里 wait 并没有指定等待哪个子进程，如果有不止一个，它会等哪一个？你可能认为是全部子进程，但其实是第一个终止的子进程。
+
+如果你想等指定的一个，或者全部子进程，你可以使用 \texttt{waitpid} 函数。
+  
+\begin{verbatim}  
+#include <sys/types.h>  
+#include <sys/wait.h>  
+pid_t waitpid(pid_t pid, int *stat_loc, int options);  
+\end{verbatim}  
+  
+\texttt{pid} 参数指定了要等待的特定子进程的 PID。如果它是 -1，\texttt{waitpid} 将返回任何子进程的信息。
+像 \texttt{wait} 一样，如果 \texttt{stat\_loc} 不是空指针，它将将状态信息写入 \texttt{stat\_loc} 指向的位置。 
+\texttt{options} 参数允许你修改 \texttt{waitpid} 的行为。最有用的选项是 \texttt{WNOHANG}，
+它可以防止调用 \texttt{waitpid} 挂起调用者的执行。你可以使用它来查看是否有任何子进程已经终止，
+如果没有，可以继续。其他选项与 \texttt{wait} 相同。  
+  
+因此，如果你想让父进程定期检查特定子进程是否已经终止，你可以使用调用  
+  
+\begin{verbatim}  
+waitpid(child_pid, (int *) 0, WNOHANG);  
+\end{verbatim}  
+  
+如果子进程还没有终止或停止，这将返回零，如果已经终止或停止，这将返回 \texttt{child\_pid}。 
+\texttt{waitpid} 在错误时将返回 -1 并设置 \texttt{errno}。如果没有子进程（\texttt{errno} 
+设置为 \texttt{ECHILD}），如果调用被信号中断（\texttt{EINTR}），
+或者如果选项参数无效（\texttt{EINVAL}），就会发生这种情况。  
+
+在一个复杂的项目中，管理好各个进程之间的消息传递和执行次序，是比较复杂的。如果再加上我们之前学过的管道，
+重定向和脚本，那么问题可以变得非常复杂。
+大家甚至可以运用自己在数学院学习的一些算法去解决这个问题。（组合优化）
+
+Linux 进程可以进行协作，可以相互发送消息，也可以相互中断。它们甚至可以安排在它们之间共享内存段，
+但它们在操作系统中本质上是独立的实体。它们并不容易共享变量。  
+  
+在许多 UNIX 和 Linux 系统中，有一类称为线程的进程。虽然线程可能难以编程，但在一些应用中，如多线程数据库服务器，
+它们可以具有很大的价值。在 Linux（以及一般的 UNIX）上编程线程并不像使用多进程那么常见，
+因为 Linux 进程非常轻量级，而且编程多个协作进程比编程线程要容易得多。
+
+\section{信号}  
+
+我们已经注意到，计算机的主内存就像一个大屋子，里面住了许多进程。这些进程之间有时需要通信。我们也学习了一些进程间通信的方法，
+但是如果发生了一些比较严重的事情，我们需要一种更快速的通信方式。这就是信号机制。
+
+信号是 UNIX 和 Linux 系统响应某些条件而生成的事件，进程在接收到信号后可能会采取一些行动。
+我们用 ``raise'' 来表示生成信号，用 ``catch'' 来表示接收信号。一些错误条件（如内存段违规、浮点处理器错误或非法指令）
+会产生信号。它们由shell和终端处理器生成以引起中断，也可以从一个进程显式地发送到另一个进程，
+作为传递信息或修改行为的一种方式。在所有这些情况下，编程接口都是相同的。信号可以被产生、捕获和执行行动，或者（至少对于一些信号）被忽略。  
+
+信号名由包含头文件 \texttt{signal.h} 定义。它们都以 \texttt{SIG} 开头，并包括以下表格中列出的那些。  
+
+\begin{tabular}{|l|l|}  
+    \hline  
+    信号名称 & 描述 \\  
+    \hline  
+    \texttt{SIGABORT} & *进程中止 \\  
+    \texttt{SIGALRM} & 闹钟 \\  
+    \texttt{SIGFPE} & *浮点异常 \\  
+    \texttt{SIGHUP} & 挂起 \\  
+    \texttt{SIGILL} & *非法指令 \\  
+    \texttt{SIGINT} & 终端中断 \\  
+    \texttt{SIGKILL} & 杀死（不能被捕获或忽略） \\  
+    \texttt{SIGPIPE} & 在没有读取器的管道上写入 \\  
+    \texttt{SIGQUIT} & 终端退出 \\  
+    \texttt{SIGSEGV} & *无效的内存段访问 \\  
+    \texttt{SIGTERM} & 终止 \\  
+    \texttt{SIGUSR1} & 用户定义的信号 1 \\  
+    \texttt{SIGUSR2} & 用户定义的信号 2 \\  
+    \hline  
+\end{tabular}  
+    
+如果进程在首先安排捕获信号之前接收到这些信号中的一个，进程将立即被终止。这是由于默认的信号处理程序是终止进程。
+  
+额外的信号包括以下表格中的信号。  
+
+\begin{tabular}{|l|l|}  
+    \hline  
+    信号名称 & 描述 \\  
+    \hline  
+    \texttt{SIGCHLD} & 子进程已停止或退出。 \\  
+    \texttt{SIGCONT} & 如果已停止，则继续执行。 \\  
+    \texttt{SIGSTOP} & 停止执行。 (不能被捕获或忽略。) \\  
+    \texttt{SIGTSTP} & 终端停止信号。 \\  
+    \texttt{SIGTTIN} & 后台进程试图读取。 \\  
+    \texttt{SIGTTOU} & 后台进程试图写入。 \\  
+    \hline  
+\end{tabular}  
+
+\texttt{SIGCHLD} 可以用于管理子进程。它默认是被忽略的。剩余的信号会导致接收它们的进程停止，除了 \texttt{SIGCONT}，它会使进程恢复。
+它们被 shell 程序用于作业控制，很少被用户程序使用。  
+  
+我们稍后会更详细地看看第一组信号。现在，只需知道如果 shell 和终端驱动程序配置正常，那么在键盘上输入中断字符（通常是 Ctrl+C）将导致 \texttt{SIGINT} 
+信号被发送到前台进程，即当前正在运行的程序。这将导致程序终止，除非它已经安排好捕获信号。  
+  
+如果你想向除当前前台任务以外的进程发送信号，使用 \texttt{kill} 命令。这需要一个可选的信号号码或名称，以及 PID（通常使用 \texttt{ps} 命令找到）来发送信号。
+例如，要向在不同终端上运行的 shell 发送一个 ``挂起'' 信号，PID 为 512，你可以使用命令  
+  
+\begin{verbatim}  
+$ kill –HUP 512  
+\end{verbatim}  
+  
+\texttt{kill} 命令的一个有用变体是 \texttt{killall}，它允许你向运行指定命令的所有进程发送信号（可能运行了不止一个）。
+并非所有版本的 UNIX 都支持它，
+尽管 Linux 通常支持。当你不知道 PID，或者当你想向执行相同命令的几个不同进程发送信号时，这是有用的。
+一个常见的用途是告诉 \texttt{inetd} 程序重新读取其配置选项。为此，你可以使用命令  
+  
+\begin{verbatim}  
+$ killall –HUP inetd  
+\end{verbatim}  
+  
+程序可以使用信号库函数处理信号。  
+
+所以最狠的杀掉一个进程的手段是:
+\begin{verbatim}  
+$ sudo killall –9 inetd  
+\end{verbatim}  
+
+我们可以在程序中主动捕捉信号，这样我们就可以在程序中处理信号。
+
+\begin{verbatim}  
+#include <signal.h>  
+void (*signal(int sig, void (*func)(int)))(int);  
+\end{verbatim}  
+
+这个相当复杂的声明表明 \texttt{signal} 是一个接收两个参数，\texttt{sig} 和 \texttt{func} 的函数。
+要捕获或忽略的信号作为参数 \texttt{sig} 给出。当接收到指定的信号时要调用的函数作为 \texttt{func} 给出。
+这个函数必须是一个接收单个 \texttt{int} 参数（接收到的信号）并且是 \texttt{void} 类型的函数。函数 \texttt{signal} 本身返回相同类型的函数，
+这是为处理这个信号设置的函数的前一个值，或者是以下两个特殊值中的一个：  
+  
+\verb|SIG_IGN| 忽略信号。  
+  
+\verb|SIG_DFL| 恢复默认行为。  
+  
+一个例子应该能让事情变得清晰。在以下的试一试中，你将编写一个程序，\texttt{ctrlc.c}，
+它对按下 Ctrl+C 的反应是打印一个适当的消息，而不是终止。再次按下 Ctrl+C 将结束程序。
+  
+函数 \texttt{ouch} 对传入参数 \texttt{sig} 中的信号作出反应。当信号发生时，将调用此函数。
+它打印一条消息，然后将 \texttt{SIGINT}（默认情况下，通过键入 Ctrl+C 生成）的信号处理重置为默认行为。  
+  
+\begin{verbatim}  
+#include <signal.h>  
+#include <stdio.h>  
+#include <unistd.h>  
+void ouch(int sig)  
+{  
+    printf("OUCH! - I got signal %d\n", sig);  
+    (void) signal(SIGINT, SIG_DFL);  
+}  
+\end{verbatim}  
+  
+\texttt{main} 函数必须拦截当你键入 Ctrl+C 时生成的 \texttt{SIGINT} 信号。其余时间，
+它只是坐在一个无限循环中，每秒打印一条消息。  
+  
+\begin{verbatim}  
+int main()  
+{  
+    (void) signal(SIGINT, ouch);  
+    while(1) {  
+        printf("Hello World!\n");  
+        sleep(1);  
+    }  
+}  
+\end{verbatim}  
+  
+首次键入 Ctrl+C（在以下输出中显示为 \verb|^C|）会导致程序反应然后继续。
+当你再次键入 Ctrl+C 时，程序结束，因为 \texttt{SIGINT} 的行为已返回到导致程序退出的默认行为。  
+  
+\begin{verbatim}  
+$ ./ctrlc1  
+Hello World!  
+Hello World!  
+Hello World!  
+Hello World!  
+^C  
+OUCH! - I got signal 2  
+Hello World!  
+Hello World!  
+Hello World!  
+Hello World!  
+^C  
+$  
+\end{verbatim}  
+  
+从这个例子中可以看出，信号处理函数接受一个整数参数，即导致调用该函数的信号号码。如果同一个函数用于处理多个信号，
+这可能很有用。这里你打印出 \texttt{SIGINT} 的值，该值在这个系统上恰好为 2。你不应该依赖信号的传统数值；在新程序中始终使用信号名称。  
+  
+在信号处理器中调用所有函数（如 \texttt{printf}）并不安全。一种有用的技巧是使用信号处理器设置一个标志，
+然后从主程序检查该标志，如果需要，打印一条消息。  
+  
+在本章的末尾，你将找到可以在信号处理器内部安全调用的列表。  
+
+程序安排当你通过键入 Ctrl+C 给出 \texttt{SIGINT} 信号时，调用函数 \texttt{ouch}。在中断函数 \texttt{ouch} 完成后，
+程序继续执行，但信号动作被恢复为默认。（不同版本的 UNIX，特别是那些源自 Berkeley UNIX 的版本，历来都有微妙不同的信号行为。
+如果你希望在信号发生后恢复对信号的默认动作，最好明确地以这种方式编码。）当它接收到第二个 \texttt{SIGINT} 信号时，程序采取默认动作，即终止程序。  
+  
+如果你想保留信号处理器并继续对 Ctrl+C 做出反应，你需要通过再次调用 \texttt{signal} 来重新建立它。这导致信号在短时间内没有被处理，
+从中断函数开始到信号处理器重新建立的刚刚之前。在这段时间内，有可能接收到第二个信号并违反你的愿望终止程序。  
+  
+我们不建议你使用 \texttt{signal} 接口来捕获信号。我们在这里包含它，是因为你会在许多较旧的程序中找到它。你将看到 \texttt{sigaction}，
+这是一个定义更清晰、更可靠的接口，你应该在所有新程序中使用它。  
+  
+\texttt{signal} 函数返回指定信号的信号处理器的前一个值（如果有的话），否则返回 \texttt{SIG\_ERR}，此时，\texttt{errno} 将被设置为一个正值。
+如果指定了无效的信号，或者试图处理一个可能不能被捕获或忽略的信号，如 \texttt{SIGKILL}，则 \texttt{errno} 将被设置为 \texttt{EINVAL}。  
+
+进程可以通过调用 \texttt{kill} 向另一个进程发送信号，包括它自己。如果程序没有权限发送信号，
+通常是因为目标进程由另一个用户拥有，那么调用将失败。这是与同名的 shell 命令相当的程序。  
+  
+\begin{verbatim}  
+#include <sys/types.h>  
+#include <signal.h>  
+int kill(pid_t pid, int sig);  
+\end{verbatim}  
+  
+\texttt{kill} 函数将指定的信号 \texttt{sig} 发送到其标识符由 \texttt{pid} 给出的进程。
+成功时返回 0。要发送信号，发送进程必须有权限这样做。通常，这意味着两个进程必须具有相同的用户 ID（也就是说，你只能向你自己的进程发送信号，尽管超级用户可以向任何进程发送信号）。  
+  
+如果给出的信号不是有效的（\texttt{errno} 设置为 \texttt{EINVAL}），或者没有权限（\texttt{EPERM}），或者指定的进程不存在（\texttt{ESRCH}），
+\texttt{kill} 将失败，返回 -1，并设置 \texttt{errno}。  
+  
+信号为你提供了一个有用的闹钟功能。进程可以使用 \texttt{alarm} 函数调用在未来的某个时间安排一个 \texttt{SIGALRM} 信号。  
+  
+\begin{verbatim}  
+#include <unistd.h>  
+unsigned int alarm(unsigned int seconds);  
+\end{verbatim}  
+  
+\texttt{alarm} 调用在 \texttt{seconds} 秒后安排发送一个 \texttt{SIGALRM} 信号。实际上，由于处理延迟和调度不确定性，闹钟将在稍后传送。
+值 0 将取消任何未决的闹钟请求。在接收到信号之前调用 \texttt{alarm} 将导致闹钟被重新安排。
+每个进程只能有一个未决的闹钟。\texttt{alarm} 返回任何未决的闹钟调用将被发送之前剩余的秒数，或者如果调用失败则返回 -1。  
+  
+要了解 \texttt{alarm} 如何工作，你可以通过使用 \texttt{fork}，\texttt{sleep} 和 \texttt{signal} 来模拟其效果。
+一个程序可以启动一个新的进程，唯一的目的是在稍后的某个时间发送一个信号。  
+
+闹钟模拟程序通过 \texttt{fork} 启动一个新的进程。这个子进程睡眠五秒钟，然后向其父进程发送一个 \texttt{SIGALRM}。
+父进程安排捕获 \texttt{SIGALRM}，然后暂停，直到接收到一个信号。你不直接在信号处理器中调用 \texttt{printf}；
+相反，你设置一个标志，然后在之后检查这个标志。  
+  
+使用信号和暂停执行是 Linux 编程的重要部分。这意味着一个程序不必一直运行。它可以等待一个事件发生，而不是在一个循环中不断地检查是否发生了一个事件。
+这在多用户环境中尤其重要，其中进程共享一个处理器，这种忙等待对系统性能有很大的影响。信号的一个特殊问题是，你永远不知道 ``如果在系统调用中间发生一个信号会发生什么？''
+（答案是一个相当不令人满意的 ``这取决于具体情况。''）一般来说，你只需要关心 ``慢'' 系统调用，如从终端读取，其中如果在等待时发生一个信号，系统调用将返回一个错误。
+如果你开始在你的程序中使用信号，你需要知道如果一个信号引起一个错误条件，一些系统调用可能会失败，这是你在添加信号处理之前可能没有考虑过的。  
+  
+你必须小心地编程你的信号，因为在使用它们的程序中可能会出现许多 ``竞态条件''。例如，如果你打算调用 \texttt{pause} 来等待一个信号，
+而那个信号在调用 \texttt{pause} 之前发生，你的程序可能会无限期地等待一个不会发生的事件。这些竞态条件，关键的时间问题，捕获了许多初学者程序员。始终仔细检查信号代码。  
+  
+我们已经深入地讨论了如何使用 \texttt{signal} 及其相关函数来产生和捕获信号，因为它们在旧的 UNIX 程序中非常常见。
+然而，X/Open 和 UNIX 规范推荐了一个更健壮的信号编程接口：\texttt{sigaction}。  
+  
+\begin{verbatim}  
+#include <signal.h>  
+int sigaction(int sig, const struct sigaction *act, struct sigaction *oact);  
+\end{verbatim}  
+  
+\texttt{sigaction} 结构体用于定义在接收到由 \texttt{sig} 指定的信号时要采取的动作，它在 \texttt{signal.h} 中定义，并至少有以下成员：  
+  
+\begin{verbatim}  
+void (*) (int) sa_handler /* function, SIG_DFL or SIG_IGN  
+sigset_t sa_mask /* signals to block in sa_handler  
+int sa_flags /* signal action modifiers  
+\end{verbatim}  
+  
+\texttt{sigaction} 函数设置与信号 \texttt{sig} 相关的动作。如果 \texttt{oact} 不为 null，\texttt{sigaction} 将先前的信号动作写入它所引用的位置。
+如果 \texttt{act} 为 null，这就是 \texttt{sigaction} 所做的全部工作。如果 \texttt{act} 不为 null，则设置指定信号的动作。  
+  
+与 \texttt{signal} 一样，如果 \texttt{sigaction} 成功则返回 0，如果不成功则返回 -1。如果指定的信号无效，
+或者试图捕获或忽略一个不能被捕获或忽略的信号，错误变量 \texttt{errno} 将被设置为 \texttt{EINVAL}。  
+  
+在参数 \texttt{act} 指向的 \texttt{sigaction} 结构体内，\texttt{sa\_handler} 是一个函数指针，
+当接收到信号 \texttt{sig} 时调用该函数。这就像你之前看到的传递给 \texttt{signal} 的函数 \texttt{func}。
+你可以在 \texttt{sa\_handler} 字段中使用特殊值 \texttt{SIG\_IGN} 和 \texttt{SIG\_DFL}，分别表示要忽略信号或将动作恢复为默认值。  
+  
+\texttt{sa\_mask} 字段指定了在调用 \texttt{sa\_handler} 函数之前要添加到进程的信号掩码的一组信号。
+这些是被阻塞的信号集，它们不会被传递给进程。这可以防止你之前看到的，在其处理器运行完成之前接收到信号的情况。使用 \texttt{sa\_mask} 字段可以消除这种竞态条件。  
+  
+然而，使用 \texttt{sigaction} 设置的处理器捕获的信号默认不会被重置，如果你想获得你之前在 \texttt{signal} 中看到的行为，
+\texttt{sa\_flags} 字段必须设置为包含值 \texttt{SA\_RESETHAND}。在我们详细查看 \texttt{sigaction} 之前，
+让我们用 \texttt{sigaction} 代替 \texttt{signal} 重写程序 \texttt{ctrlc.c}。  
+
+尝试一下 \texttt{sigaction}
+  
+按照以下方式进行更改，以便 \texttt{SIGINT} 被 \texttt{sigaction} 拦截。将新程序命名为 \texttt{ctrlc2.c}。  
+  
+\begin{verbatim}  
+#include <signal.h>  
+#include <stdio.h>  
+#include <unistd.h>  
+  
+void ouch(int sig) {  
+    printf("OUCH! - I got signal %d\n", sig);  
+}  
+  
+int main() {  
+    struct sigaction act;  
+    act.sa_handler = ouch;  
+    sigemptyset(&act.sa_mask);  
+    act.sa_flags = 0;  
+    sigaction(SIGINT, &act, 0);  
+  
+    while(1) {  
+        printf("Hello World!\n");  
+        sleep(1);  
+    }  
+}  
+\end{verbatim}  
+
+  
+当你运行这个版本的程序时，因为 \texttt{SIGINT} 被 \texttt{sigaction} 反复处理，所以每次你输入 Ctrl+C 都会得到一条消息。
+要终止程序，你必须输入 Ctrl+\\，这将默认生成 \texttt{SIGQUIT} 信号。  
+  
+\begin{verbatim}  
+$ ./ctrlc2  
+Hello World!  
+Hello World!  
+Hello World!  
+^C  
+OUCH! - I got signal 2  
+Hello World!  
+Hello World!  
+^C  
+OUCH! - I got signal 2  
+Hello World!  
+Hello World!  
+^\  
+Quit  
+$  
+\end{verbatim}  
+    
+程序调用 \texttt{sigaction} 而不是 \texttt{signal} 来为 Ctrl+C（\texttt{SIGINT}）设置信号处理器，
+处理器为函数 \texttt{ouch}。它首先需要设置一个包含处理器、信号掩码和标志的 \texttt{sigaction} 结构体。在这种情况下，
+你不需要任何标志，可以使用新函数 \texttt{sigemptyset} 创建一个空的信号掩码。  
+  
+运行此程序后，你可能会发现已经创建了一个核心转储（在一个名为 \texttt{core} 的文件中）。你可以安全地删除它。  
+
+\verb|sigemptyset(&act.sa_mask)| 这行代码的目的是初始化 \verb|act.sa_mask| 信号集，将其清空，即不阻塞任何信号。
+
+在 Linux 系统中，当一个信号处理函数正在运行时，系统默认会阻塞该信号（除非该信号是 SIGSTOP 或 SIGKILL）。
+这就意味着如果在处理一个信号的过程中，又收到了别的信号，系统会将这个新的信号阻塞，
+等到当前的信号处理函数完成后再处理这个新的信号。这样可以防止信号处理函数被同样的信号反复中断，导致递归调用。
+
+然而，有时我们可能希望在处理一个信号的过程中，如果收到了新的同样的信号，立即中断当前的信号处理函数并重新开始。
+这就需要我们修改信号的阻塞行为。这就是 \verb|sigemptyset(&act.sa_mask)| 这行代码的作用。
+
+\verb|sigemptyset(&act.sa_mask)| 这行代码会将 \verb|act.sa_mask| 信号集清空，这就意味着在处理 SIGINT 信号的过程中，
+如果再次收到 SIGINT 信号，不会阻塞，而是立即中断当前的信号处理函数并重新开始。
+
+如果在处理一个信号（例如SIGINT）的过程中收到了另一个不同的信号（例如SIGTERM），那么这个新的信号的处理方式取决于 \verb|act.sa_mask| 中对应该信号的设置。
+
+在上面的代码中，调用了 \verb|sigemptyset(&act.sa_mask)|，这个函数会将 \verb|act.sa_mask| 中的所有信号都设置为 ``不阻塞''。
+这意味着在处理 SIGINT 信号的过程中，如果收到了其他任何信号（除非是不能被阻塞的 SIGKILL 或 SIGSTOP），这个新的信号都不会被阻塞，而是会被立即处理。
+
+如果你希望在处理 SIGINT 信号的过程中阻塞其他某些信号，你可以使用 \verb|sigaddset()| 函数将这些信号添加到 \verb|act.sa_mask| 中。
+例如，如果你希望在处理 SIGINT 信号的过程中阻塞 SIGTERM 信号，你可以这样写：
+
+\begin{verbatim}
+    sigemptyset(&act.sa_mask);
+    sigaddset(&act.sa_mask, SIGTERM);
+\end{verbatim}
+
+这样，在处理 SIGINT 信号的过程中，如果收到了 SIGTERM 信号，这个信号就会被阻塞，等到 SIGINT 信号处理完毕后再处理 SIGTERM 信号。
+
+头文件 \texttt{signal.h} 定义了类型 \texttt{sigset\_t} 和用于操作信号集的函数。这些集合在 \texttt{sigaction} 和其他函数中被用来在接收到信号时修改进程的行为。  
+  
+\begin{verbatim}  
+#include <signal.h>  
+int sigaddset(sigset_t *set, int signo);  
+int sigemptyset(sigset_t *set);  
+int sigfillset(sigset_t *set);  
+int sigdelset(sigset_t *set, int signo);  
+\end{verbatim}  
+  
+这些函数执行由它们的名字所暗示的操作。\texttt{sigemptyset} 初始化一个信号集为空。\texttt{sigfillset} 初始化一个信号集，使其包含所有定义的信号。
+\texttt{sigaddset} 和 \texttt{sigdelset} 在信号集中添加和删除指定的信号（\texttt{signo}）。如果成功，
+它们都返回 0，如果出错，返回 -1 并设置 \texttt{errno}。唯一定义的错误是如果指定的信号无效，则 \texttt{EINVAL}。  
+  
+函数 \texttt{sigismember} 确定给定的信号是否是信号集的成员。如果信号是集合的成员，它返回 1，如果不是，返回 0，
+如果信号无效，返回 -1 并将 \texttt{errno} 设置为 \texttt{EINVAL}。  
+  
+\begin{verbatim}  
+#include <signal.h>  
+int sigismember(sigset_t *set, int signo);  
+\end{verbatim}  
+  
+通过调用函数 \texttt{sigprocmask} 设置或检查进程信号掩码。这个信号掩码是当前被阻塞的信号集，因此当前进程不会接收到这些信号。  
+  
+\begin{verbatim}  
+#include <signal.h>  
+int sigprocmask(int how, const sigset_t *set, sigset_t *oset);  
+\end{verbatim}  
+  
+\texttt{sigprocmask} 可以根据 \texttt{how} 参数以多种方式更改进程信号掩码。如果 \texttt{set} 不为 null，
+新的信号掩码值将在参数 \texttt{set} 中传递，并且先前的信号掩码将写入信号集 \texttt{oset}。  
+  
+\texttt{how} 参数可以是以下之一：  
+\begin{itemize}  
+\item \texttt{SIG\_BLOCK}：将 \texttt{set} 中的信号添加到信号掩码。  
+\item \texttt{SIG\_SETMASK}：从 \texttt{set} 设置信号掩码。  
+\item \texttt{SIG\_UNBLOCK}：从信号掩码中删除 \texttt{set} 中的信号。  
+\end{itemize}  
+  
+如果 \texttt{set} 参数是空指针，那么 \texttt{how} 的值不会被使用，调用的唯一目的是将当前信号掩码的值获取到 \texttt{oset} 中。  
+  
+如果 \texttt{sigprocmask} 成功完成，返回 0，如果 \texttt{how} 参数无效，返回 -1，此时 \texttt{errno} 将被设置为 \texttt{EINVAL}。  
+  
+如果一个信号被进程阻塞，它不会被传递，但会保持挂起状态。程序可以通过调用函数 \texttt{sigpending} 来确定其阻塞的信号中哪些是挂起的。  
+  
+\begin{verbatim}  
+#include <signal.h>  
+int sigpending(sigset_t *set);  
+\end{verbatim}  
+  
+这将把被阻止传递并且挂起的信号集写入由 \texttt{set} 指向的信号集。如果成功，返回 0，否则返回 -1 并设置 \texttt{errno} 来指示错误。
+当程序需要处理信号并控制处理函数的调用时间时，这个函数可能会很有用。  
+  
+通过调用 \texttt{sigsuspend}，进程可以暂停执行，直到接收到一组信号中的一个。这是你之前遇到的 \texttt{pause} 函数的更一般形式。  
+  
+\begin{verbatim}  
+#include <signal.h>  
+int sigsuspend(const sigset_t *sigmask);  
+\end{verbatim}  
+  
+\texttt{sigsuspend} 函数用 \texttt{sigmask} 给出的信号集替换进程信号掩码，然后暂停执行。在执行信号处理函数后，它将恢复执行。
+如果接收到的信号终止了程序，\texttt{sigsuspend} 将永远不会返回。如果接收到的信号没有终止程序，\texttt{sigsuspend} 返回 -1 并将 
+\texttt{errno} 设置为 \texttt{EINTR}。  
+  
+在 \texttt{sigaction} 中使用的 \texttt{sigaction} 结构体的 \texttt{sa\_flags} 字段可以包含以下表格中显示的值来修改信号行为：  
+\begin{itemize}  
+\item \texttt{SA\_NOCLDSTOP}：当子进程停止时，不生成 \texttt{SIGCHLD}。  
+\item \texttt{SA\_RESETHAND}：在接收到信号时，将信号操作重置为 \texttt{SIG\_DFL}。  
+\item \texttt{SA\_RESTART}：重新启动可中断的函数，而不是因 \texttt{EINTR} 错误。  
+\item \texttt{SA\_NODEFER}：在捕获时，不将信号添加到信号掩码中。  
+\end{itemize}  
+  
+\texttt{SA\_RESETHAND} 标志可以用来在捕获信号时自动清除信号函数，如我们之前看到的。  
+  
+程序使用的许多系统调用是可中断的；也就是说，当它们接收到一个信号时，它们将返回一个错误，并将 \texttt{errno} 设置为 \texttt{EINTR}，
+以指示函数由于信号而返回。这种行为需要使用信号的应用程序额外小心。如果在调用 \texttt{sigaction} 时在 \texttt{sa\_flags} 字段中设置了 \texttt{SA\_RESTART}，
+那么一个可能会被信号中断的函数将在执行信号处理函数后重新启动。  
+  
+通常，当一个信号处理函数正在执行时，接收到的信号会在处理函数的执行期间添加到进程信号掩码中。这防止了同一信号的后续发生，导致信号处理函数再次运行。
+如果函数不是可重入的，那么在它完成处理第一个信号之前，由另一个信号的发生调用它可能会导致问题。然而，如果设置了 \texttt{SA\_NODEFER} 标志，那么在接收到这个信号时，信号掩码不会被改变。  
+  
+一个信号处理函数可能在中间被中断并被其他东西再次调用。当你回到第一次调用时，至关重要的是它仍然能正确操作。它不仅是递归的（调用自身），
+而且是可重入的（可以被再次进入和执行而不会有问题）。在内核中处理多个设备的中断服务例程需要是可重入的，因为在执行相同的代码过程中，更高优先级的中断可能会“插入”。  
+  
+以下表格列出了在信号处理器内部安全调用的函数，这些函数由 X/Open 规范保证要么是可重入的，要么不会自己引发信号。  
+  
+不在以下表格中列出的所有函数都应被认为在信号方面是不安全的。  
+  
+\begin{verbatim}  
+access alarm cfgetispeed cfgetospeed  
+cfsetispeed cfsetospeed chdir chmod  
+chown close creat dup2  
+dup execle execve _exit  
+fcntl fork fstat getegid  
+geteuid getgid getgroups getpgrp  
+getpid getppid getuid kill  
+link lseek mkdir mkfifo  
+open pathconf pause pipe  
+read rename rmdir setgid  
+setpgid setsid setuid sigaction  
+sigaddset sigdelset sigemptyset sigfillset  
+sigismember signal sigpending sigprocmask  
+sigsuspend sleep stat sysconf  
+tcdrain tcflow tcflush tcgetattr  
+tcgetpgrp tcsendbreak tcsetattr tcsetpgrp  
+time times umask uname  
+unlink utime wait waitpid  
+write  
+\end{verbatim}  
+
+我们列出了 Linux 和 UNIX 程序通常需要的信号及其默认行为。  
+  
+以下表格中的信号的默认操作是异常终止进程，带有所有 \texttt{\_exit} 的后果（类似于 \texttt{exit}，但在返回内核之前不执行任何清理）。
+然而，状态可以提供给 \texttt{wait}，并且 \texttt{waitpid} 表示由指定信号引起的异常终止。  
+  
+\begin{tabular}{|c|p{6cm}|}  
+\hline  
+\textbf{信号名称} & \textbf{描述} \\  
+\hline  
+\texttt{SIGALRM} & 由 \texttt{alarm} 函数设置的计时器产生。 \\  
+\hline  
+\texttt{SIGHUP} & 由断开连接的终端发送给控制进程，或者在终止时由控制进程发送给每个前台进程。 \\  
+\hline  
+\texttt{SIGINT} & 通常通过在终端中键入 Ctrl+C 或配置的中断字符引发。 \\  
+\hline  
+\texttt{SIGKILL} & 通常用于从 shell 强制终止一个错误的进程，因为这个信号不能被捕获或忽略。 \\  
+\hline  
+\texttt{SIGPIPE} & 试图向没有关联读取器的管道写入时产生。 \\  
+\hline  
+\texttt{SIGTERM} & 作为请求进程结束的信号发送。UNIX 在关闭时使用，请求系统服务停止。这是从 \texttt{kill} 命令发送的默认信号。 \\  
+\hline  
+\texttt{SIGUSR1, SIGUSR2} & 可能被进程用来相互通信，可能使它们报告状态信息。 \\  
+\hline  
+\end{tabular}  
+  
+默认情况下，下一张表中的信号也会导致异常终止。此外，可能会发生依赖于实现的操作，如创建核心文件。  
+  
+\begin{tabular}{|c|p{6cm}|}  
+\hline  
+\textbf{信号名称} & \textbf{描述} \\  
+\hline  
+\texttt{SIGFPE} & 由浮点运算异常产生。 \\  
+\hline  
+\texttt{SIGILL} & 处理器执行了非法指令。通常由损坏的程序或无效的共享内存模块引起。 \\  
+\hline  
+\texttt{SIGQUIT} & 通常通过在终端中键入 Ctrl+\ 或配置的退出字符引发。 \\  
+\hline  
+\texttt{SIGSEGV} & 一个分段违规，通常由于在内存中的非法位置读取或写入而引起，可能是由于超出数组边界或解引用无效指针。
+覆盖本地数组变量并破坏堆栈可能会导致在函数返回到非法地址时引发 \texttt{SIGSEGV}。 \\  
+\hline  
+\end{tabular}  
+  
+默认情况下，进程在接收到以下表格中的一个信号时会被挂起。  
+  
+\begin{tabular}{|c|p{6cm}|}  
+\hline  
+\textbf{信号名称} & \textbf{描述} \\  
+\hline  
+\texttt{SIGSTOP} & 停止执行（不能被捕获或忽略）。 \\  
+\hline  
+\texttt{SIGTSTP} & 终端停止信号，通常通过键入 Ctrl+Z 引发。 \\  
+\hline  
+\texttt{SIGTTIN, SIGTTOU} & 由 shell 用来表示需要从终端读取或产生输出的后台任务已经停止。 \\  
+\hline  
+\end{tabular}  
+  
+\texttt{SIGCONT} 会重新启动一个停止的进程，如果接收到的进程没有停止，那么它将被忽略。默认情况下，
+\texttt{SIGCHLD} 信号会被忽略。  
+  
+\begin{tabular}{|c|p{6cm}|}  
+\hline  
+\textbf{信号名称} & \textbf{描述} \\  
+\hline  
+\texttt{SIGCONT} & 如果停止，继续执行。 \\  
+\hline  
+\texttt{SIGCHLD} & 当子进程停止或退出时引发。 \\  
+\hline  
+\end{tabular} 
+
+在本章中，你已经看到进程是 Linux 操作系统的基本部分。你已经学习了如何启动、终止和查看它们，以及如何使用它们来解决编程问题。
+你还了解了信号，这是可以用来控制正在运行的程序的动作的事件。你已经看到，所有的 Linux 进程，从最底层到包括 init，
+都使用同一组对任何程序员都可用的系统调用。  
+
+在C语言中，函数指针是一种特殊类型的指针，它用来存储函数的地址，而不是变量的地址。这意味着，函数指针使得我们可以通过指针来调用函数。  
+  
+函数指针的声明方式如下：  
+  
+\begin{verbatim}  
+return_type (*ptr_name)(parameter_list);  
+\end{verbatim}  
+  
+其中：  
+  
+\begin{itemize}  
+\item \texttt{return\_type} 是函数返回值的类型。  
+\item \texttt{(*ptr\_name)} 是函数指针的名称，注意括号的使用，这是因为 \texttt{*} 的优先级低于函数调用操作符 \texttt{()}。  
+\item \texttt{parameter\_list} 是函数参数的类型列表。  
+\end{itemize}  
+  
+例如，以下是一个返回类型为 \texttt{void}，参数为 \texttt{int} 类型的函数指针 \texttt{func\_ptr} 的声明：  
+  
+\begin{verbatim}  
+void (*func_ptr)(int);  
+\end{verbatim}  
+  
+一旦我们有了一个函数指针，我们就可以使用它来调用函数。例如，假设我们有一个函数 \texttt{void my\_func(int x)}，我们可以这样使用函数指针：  
+  
+\begin{verbatim}  
+void my_func(int x) {  
+    printf("Value: %d\n", x);  
+}  
+  
+int main() {  
+    void (*func_ptr)(int);  
+    func_ptr = my_func;  // 将 my_func 的地址赋给 func_ptr  
+    func_ptr(10);  // 通过函数指针调用函数，输出 "Value: 10"  
+    return 0;  
+}  
+\end{verbatim}  
+  
+函数指针在很多情况下都非常有用，例如，它们可以用于实现回调函数，或者用于创建函数表（function table），这样可以动态地改变程序的行为。  
+
+\end{document}

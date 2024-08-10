@@ -1,0 +1,148 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, amsthm, amssymb}
+\usepackage{graphicx}  
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{enumitem}
+
+\title{Matrix Multiplication Algorithms}
+\author{Gao Zhuohang}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+Matrix multiplication is a fundamental operation in linear algebra with extensive applications across various scientific and engineering domains. The traditional method, which involves a cubic time complexity of $O(n^3)$, has been a subject of optimization for decades. This paper aims to provide an overview of the historical development of matrix multiplication algorithms, focusing on the contributions of Strassen, Coppersmith and Winograd, and recent advancements.
+
+\section{Matrix Multiplication Algorithms}\label{sec::algorithms}
+
+The standard algorithm for matrix multiplication, taught in introductory linear algebra courses, involves a straightforward calculation of the dot product for each element of the resulting matrix. This method has a time complexity of $O(n^3)$, where $n$ is the dimension of the matrices~\cite{strang2006}.
+
+In 1969, Volker Strassen introduced a revolutionary algorithm that reduced the time complexity of matrix multiplication below the traditional cubic threshold. Strassen's method, which involves a combination of multiplication and addition operations, achieves a complexity of $O(n^{2.81})$~\cite{strassen1969}. This was the first instance of a subcubic algorithm for matrix multiplication and marked a significant milestone in the field.
+
+Following Strassen's breakthrough, further improvements were made by Coppersmith and Winograd. They introduced an algorithm that achieved a complexity of $O(n^{2.376})$~\cite{coppersmith1987}. Their work built upon the foundation laid by Strassen and further optimized the process of matrix multiplication, making it more efficient for larger matrices.
+
+Recent research has pushed the boundaries even further. In a groundbreaking study, the time complexity of matrix multiplication has been optimized to $O(n^{2.3728596})$~\cite{duan2023faster}. This latest advancement demonstrates the ongoing progress in the field and the potential for further improvements in the future. The researchers at Tsinghua University, along with international collaborators, have developed an algorithm that refines the existing methods and sets a new standard for matrix multiplication efficiency.
+
+
+
+\section{Standard Matrix Multiplication Algorithm}\label{sec::standard_algorithm}
+The standard matrix multiplication algorithm, with a time complexity of $O(n^3)$, is based on the following formula for multiplying two matrices $A$ and $B$ to obtain the resulting matrix $C$:
+
+\[
+c_{ij} = \sum_{k=1}^{n} a_{ik} \cdot b_{kj}
+\]
+
+Where $a_{ik}$ is the element in the $i$-th row and $k$-th column of matrix $A$, and $b_{kj}$ is the element in the $k$-th row and $j$-th column of matrix $B$. The element $c_{ij}$ is the $(i, j)$ entry of the result matrix $C$.
+
+The pseudocode for this algorithm is as follows:
+
+\begin{verbatim}
+for i = 1 to m:
+    for j = 1 to n:
+        for k = 1 to p:
+            C[i][j] += A[i][k] * B[k][j]
+\end{verbatim}
+
+This simple algorithm, while having a high time complexity, serves as the foundation for more advanced methods that aim to reduce the number of multiplications and additions.
+
+\section{Introduction for Strassen Algorithm}
+
+\paragraph The algorithm introduced by Volker Strassen in 1968 in his work “Gaussian Elimination is not Optimal" will computes the coefficients of the product of two square matrices A and B of order n from the coefficients of A and B with less than $4.7 \cdot n^{\log 7}$ arithmetical operations.
+
+We define algorithms $\alpha_{m,k}$ which multiply matrices of order $m2^k$, by induction on k: $\alpha_{m, 0}$ is the usual algorithm for matrix mulitiplication. $\alpha_{m, k}$ already being known, define $\alpha_{m, k+1}$ as follows:
+
+If A,B are matrices of order $m2^{k+1}$ to be mulitplied, write
+
+\[
+A=\begin{pmatrix}
+  A_{11} & A_{12} \\
+  A_{21} & A_{22} \\
+\end{pmatrix},
+B=\begin{pmatrix}
+  B_{11} & B_{12} \\
+  B_{21} & B_{22} \\
+\end{pmatrix},
+C=\begin{pmatrix}
+  C_{11} & C_{12} \\
+  C_{21} & C_{22} \\
+\end{pmatrix}
+\]
+
+then the $A_{ik},B{ik},C{ik}$ are matrices of order $m2^k$. Then compute seven parts:
+
+
+\begin{align}
+  D_1 &= (A_{11} + A_{22})(B_{11}+B_{22}) \\
+  D_2 &= (A_{21}+ A_{22})B_{11} \\
+  D_3 &= A_{11}(B_{12}-B{22}) \\
+  D_4 &= A_{22}(-B_{11}+B_{21}) \\
+  D_5 &= (A_{11}+A_{12})B_{22} \\
+  D_6 &= (-A_{11}+A_{21})(B_{11}+B_{12}) \\
+  D_7 &= (A_{12}-A_{222})(B_{21}+B_{22})
+\end{align}
+
+Then we can compute:
+
+\begin{align}
+  C_{11} &= D_1 + D_4 - D_5 + D_7 \\
+  C_{21} &= D_2 + D_4 \\
+  C_{12} &= D_3 + D_5 \\
+  C_{22} &= D_1 + D_3 - D_2 + D_6
+\end{align}
+using $\alpha_{m,k}$ for multiplication and the usual algorithm for addition and subtractin of matrices of order $m2^k$.
+
+By induction on k we easily see:
+
+First, $\alpha_{m, k}$ computes the product of two matrices of order $m2^k$ with $m^37^k$ multiplicatoins and $(5+m)m^27^k-6(m2^k)^2$ additions and subtractions of numbers.
+That means one may multiply two matrices of order $2^k$ with $7^k$ numbermultiplicatoins and less than $6 \cdot 7^k$ additions and subtractions.
+
+Second, the product of two matrics of order n may be computed with $<4 \cdot 7 \cdot n^{\log 7}$ arithmetical operatoins.
+
+The same method can be used in matrix inversion.
+\section{CBLAS and the \texttt{cblas\_dgemm} Function}
+The CBLAS library is a collection of optimized routines for basic linear algebra operations, including matrix multiplication. The \texttt{cblas\_dgemm} function is a part of CBLAS and provides an implementation of the standard matrix multiplication operation.
+
+\subsection{Algorithm Principle and Calculation Formula}
+The \texttt{cblas\_dgemm} function is based on the principle of the BLAS (Basic Linear Algebra Subprograms) level 3, which is designed to optimize the performance of matrix-matrix multiplication. It uses blocks and tiles to manage the computation and minimize the overhead of memory access, leading to better performance on modern architectures.
+
+The calculation formula for matrix multiplication in CBLAS is the same as the standard algorithm, but it is implemented with optimizations that take advantage of the specific properties of the hardware and the data layout. The function performs the following steps:
+
+\[
+C = \alpha \cdot (A \times B) + \beta \cdot C
+\]
+
+Where $\alpha$ and $\beta$ are scalar values, $A$ and $B$ are the input matrices, and $C$ is the output matrix.
+
+\subsection{Function Parameters and Calling Method}
+The \texttt{cblas\_dgemm} function takes several parameters to perform the matrix multiplication:
+
+\begin{itemize}
+  \item \texttt{Order}: Specifies the row-major or column-major storage order of the matrices.
+  \item \texttt{TransA}: Determines whether matrix A is transposed or not.
+  \item \texttt{TransB}: Determines whether matrix B is transposed or not.
+  \item \texttt{M, N, K}: Define the dimensions of the matrices involved.
+  \item \texttt{alpha}: A scalar multiplier for the matrices.
+  \item \texttt{A}: Pointer to the first matrix.
+  \item \texttt{lda}: Leading dimension of matrix A.
+  \item \texttt{B}: Pointer to the second matrix.
+  \item \texttt{ldb}: Leading dimension of matrix B.
+  \item \texttt{beta}: A scalar multiplier for the result matrix C.
+  \item \texttt{C}: Pointer to the result matrix.
+  \item \texttt{ldc}: Leading dimension of the result matrix C.
+\end{itemize}
+
+\section{Implementation}\label{sec::c_implementation}
+
+\section{Experiment}\label{sec::experiment}
+
+\section{Conclusion}\label{sec::conclusion}
+
+\bibliographystyle{plain}  
+\bibliography{references}  
+
+\end{document}

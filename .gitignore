@@ -1,0 +1,7 @@
+*.o
+*.bmp
+test
+.vscode
+*.rle
+.DS_Store
+cmake
